@@ -35,7 +35,6 @@ public class EnemyBehavior : MonoBehaviour
     {
         if(_navMesh.remainingDistance < 1f)
         {
-            Debug.Log(_checkPointCounter);
             _checkPointCounter++;
             _navMesh.destination = _checkPoints[_checkPointCounter].transform.position;
         }

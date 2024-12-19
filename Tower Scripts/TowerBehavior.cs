@@ -15,4 +15,14 @@ public class TowerBehavior : MonoBehaviour
     {
         
     }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Placement"))
+        {
+            Debug.Log("Connected to Placement");
+            transform.parent = other.transform;
+            transform.position = Vector3.zero;
+        }
+    }
 }

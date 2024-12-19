@@ -26,11 +26,20 @@ public class CameraSystem : MonoBehaviour
             inputDirection.z = 1;
         }
 
-        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
+        else if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
         {
             inputDirection.z = -1;
         }
 
+        else if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+        {
+            inputDirection.x = -1;
+        }
+
+        else if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+        {
+            inputDirection.x = 1;
+        }
 
         Vector3 CamDirection = transform.forward * inputDirection.z + transform.right * inputDirection.x;
 
@@ -62,12 +71,12 @@ public class CameraSystem : MonoBehaviour
     {
         float camRotation = 0;
 
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+        if (Input.GetKey(KeyCode.Q))
         {
             camRotation += -1;
         }
 
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+        if (Input.GetKey(KeyCode.E))
         {
             camRotation += 1;
         }
