@@ -4,9 +4,8 @@ using UnityEngine;
 using Cinemachine;
 public class CameraSystem : MonoBehaviour
 {
-    
-    public float camSpeed, rotationSpeed;
 
+    public float camSpeed, rotationSpeed;
     [SerializeField] private CinemachineVirtualCamera _virtualCam;
     private float _fovMin = 10, _fovMax = 50, _fov = 50;
     
@@ -99,6 +98,4 @@ public class CameraSystem : MonoBehaviour
         _fov = Mathf.Clamp(_fov, _fovMin, _fovMax);
         _virtualCam.m_Lens.FieldOfView = _fov;
     }
-
-
 }

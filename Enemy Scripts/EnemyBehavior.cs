@@ -10,19 +10,23 @@ public class EnemyBehavior : MonoBehaviour
         Attacking,
         Dead
     }
+    private UIManager _uimanager;
     private Animator _anim;
     private _aiState _states;
 
     private NavMeshAgent _navMesh;
-    [SerializeField] private GameObject[] _checkPoints;
+    private GameObject _startingPoint, _finishPoint;
     private int _checkPointCounter, _health = 100;
 
     void Start()
     {
+        _startingPoint = GameObject.FindGameObjectWithTag("Starting Point");
+        _finishPoint = GameObject.FindGameObjectWithTag("Finish Point");
+        _uimanager = FindObjectOfType<UIManager>();
         _navMesh = GetComponent<NavMeshAgent>();
         if (_navMesh != null)
         {
-                _navMesh.destination = _checkPoints[_checkPointCounter].transform.position;
+            _navMesh.destination = _finishPoint.transform.position;
         }
         else
         {
@@ -33,10 +37,15 @@ public class EnemyBehavior : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(_navMesh.remainingDistance < 1f)
+
+    }
+
+    void Damage(int DamageAmount)
+    {
+        _health -= DamageAmount;
+        if(_health < 0)
         {
-            _checkPointCounter++;
-            _navMesh.destination = _checkPoints[_checkPointCounter].transform.position;
+            _uimanager.money += 150;
         }
     }
 }
