@@ -16,8 +16,10 @@ public class EnemyBehavior : MonoBehaviour
 
     private NavMeshAgent _navMesh;
     private GameObject _startingPoint, _finishPoint;
-    private int _checkPointCounter, _health = 100;
-
+    [SerializeField]
+    public float health = 100;
+    private bool _damageCooldown = false;
+    private bool _deathMoney = false;
     void Start()
     {
         _startingPoint = GameObject.FindGameObjectWithTag("Starting Point");
@@ -39,13 +41,32 @@ public class EnemyBehavior : MonoBehaviour
     {
 
     }
-
-    void Damage(int DamageAmount)
+    public void Injured(float DamageAmount)
     {
-        _health -= DamageAmount;
-        if(_health < 0)
+
+        if (_damageCooldown == false)
         {
-            _uimanager.money += 150;
+            health = health - DamageAmount;
+            if (health < 1)
+            {
+                _navMesh.isStopped = true;
+                Destroy(this.gameObject);
+            }
+
+            if (_deathMoney == false)
+            {
+                _uimanager.money += 150;
+                _deathMoney = true;
+            }
+         
+            _damageCooldown = true;
+            StartCoroutine(DamageCooldown());
         }
+    }
+
+    IEnumerator DamageCooldown()
+    {
+        yield return new WaitForSeconds(.3f);
+        _damageCooldown = false;
     }
 }
