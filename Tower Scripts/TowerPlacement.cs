@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class TowerPlacement : MonoBehaviour
 {
+
     [SerializeField] private UIManager _uiManager;
     private TowerSpot _towerSpots, _selectedSpot;
     [SerializeField] private Camera _playerCam;
