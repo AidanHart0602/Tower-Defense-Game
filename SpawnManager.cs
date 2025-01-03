@@ -4,74 +4,124 @@ using UnityEngine;
 
 public class SpawnManager : MonoBehaviour
 {
-    [SerializeField]
-    private UIManager _uiManager;
-    private List<GameObject> _enemyPool;
-    [SerializeField]
-    private GameObject[] _enemyType;
-    [SerializeField]
-    private GameObject _enemyContainer;
-    [SerializeField]
-    private GameObject _startingPoint;
+    [SerializeField] private UIManager _uiManager;
+    [SerializeField] private GameObject[] _enemyType;
+    [SerializeField] private GameObject _enemyContainer;
+    [SerializeField] private GameObject _startingPoint;
+    [SerializeField] private List<GameObject> _enemyTypeOnePool, _enemyTypeTwoPool;
+    private Vector2Int _NumOfEnemies;
+    [SerializeField] private int _waveNum, _numOfFirstEnems, _numOfSecondEnems;
+    private bool _spawnComplete;
+    [SerializeField] private int _firstEnemyLimit, _secondEnemyLimit;
 
-    private int _waveNum, _waveEnemyNum, _spawnedEnemies;
-    private int _waveEnemyLimit = 5;
-    List<GameObject> _storeEnemies(int NumOfEnems)
+    List<GameObject> StoreSecondEnemyType(int NumOfEnems)
+    {
+        for (int i = 0; i < NumOfEnems; i++)
+        {
+            GameObject enemy = Instantiate(_enemyType[1]);
+            enemy.transform.parent = _enemyContainer.transform;
+            enemy.SetActive(false);
+            _enemyTypeTwoPool.Add(enemy);
+        }
+        return _enemyTypeTwoPool;
+    }
+
+    List<GameObject> StoreFirstEnemyType(int NumOfEnems)
     {
         for (int i = 0; i < NumOfEnems; i++)
         {
             GameObject enemy = Instantiate(_enemyType[0]);
-            enemy.transform.position = _startingPoint.transform.position;
+            enemy.transform.parent = _enemyContainer.transform;
             enemy.SetActive(false);
-            _enemyPool.Add(enemy);
+            _enemyTypeOnePool.Add(enemy);
         }
-        return _enemyPool;
+        return _enemyTypeOnePool;
     }
 
     void Start()
     {
-        _storeEnemies(10);
+        StoreFirstEnemyType(55);
+        StoreSecondEnemyType(27);
         NewWave();
     }
-    private void NewWave() 
+    private void NewWave()
     {
         _waveNum++;
-        _uiManager.waveUpdate(_waveNum);
         if (_waveNum == 11)
         {
             //Start the end sequence
             return;
         }
-        _waveEnemyLimit += 5;
-        _waveEnemyNum = _waveEnemyLimit;
-        _uiManager.enemyNumChange(_waveEnemyNum);
-        _spawnedEnemies = 0;
+        _uiManager.waveUpdate(_waveNum);
+
+        if (_waveNum < 2)
+        {
+            _NumOfEnemies = new Vector2Int(10, 0);
+            _spawnComplete = false;
+            _firstEnemyLimit = _NumOfEnemies.x;
+            _secondEnemyLimit = _NumOfEnemies.y;
+            _numOfFirstEnems = 0;
+            _numOfSecondEnems = 0;
+        }
+
+        if (_waveNum >= 2)
+        {
+            _NumOfEnemies = new Vector2Int(_NumOfEnemies.x + 5, _NumOfEnemies.y + 3);
+            _spawnComplete = false;
+            _firstEnemyLimit = _NumOfEnemies.x;
+            _secondEnemyLimit = _NumOfEnemies.y;
+            _numOfFirstEnems = 0;
+            _numOfSecondEnems = 0;
+        }
+
         StartCoroutine(SpawnAI());
     }
 
-    public void ReduceNumbers() 
+    public void ReduceNumbers()
     {
-        _waveEnemyNum--;
-        _uiManager.enemyNumChange(_waveEnemyNum);
+
     }
     IEnumerator SpawnAI()
     {
-        while((_spawnedEnemies > _waveEnemyLimit ) && (_spawnedEnemies != _waveEnemyLimit))
+        while (_spawnComplete != true)
         {
-            foreach(var enemy in _enemyPool) 
+            foreach (GameObject enemy in _enemyTypeOnePool)
             {
-                if(enemy.activeInHierarchy == false)
+                if (_firstEnemyLimit > _numOfFirstEnems)
                 {
-                    _spawnedEnemies++;
-                    enemy.SetActive(true);
-                    break;
+                    if (enemy.activeInHierarchy == false)
+                    {
+                        enemy.transform.position = _startingPoint.transform.position;
+                        _numOfFirstEnems++;
+                        enemy.SetActive(true);
+                        yield return new WaitForSeconds(2f);
+                    }
                 }
             }
-            yield return new WaitForSeconds(0.5f);
+
+            foreach (GameObject enemy in _enemyTypeTwoPool)
+            {
+                if (_waveNum >= 2 && (_secondEnemyLimit > _numOfSecondEnems))
+                {
+                    if (enemy.activeInHierarchy == false)
+                    {
+                        enemy.transform.position = _startingPoint.transform.position;
+                        _numOfSecondEnems++;
+                        enemy.SetActive(true);
+                        yield return new WaitForSeconds(6f);
+                    }
+                }
+            }
+
+            if ((_numOfFirstEnems == _firstEnemyLimit) && (_numOfSecondEnems == _secondEnemyLimit))
+            {
+                _spawnComplete = true;
+            }
         }
 
-        if((_spawnedEnemies == _waveEnemyLimit) && _waveNum != 11)
+        if (_spawnComplete == true && _waveNum != 11)
         {
+            yield return new WaitForSeconds(40);
             NewWave();
         }
     }

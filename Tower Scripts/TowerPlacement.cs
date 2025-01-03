@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using BaseMissileLauncher;
 public class TowerPlacement : MonoBehaviour
 {
 
@@ -13,7 +13,6 @@ public class TowerPlacement : MonoBehaviour
     private bool _canPlace;
     public LayerMask raycastLayers;
     private int _towerCost;
-
     void Start()
     {
         _towerSpots = FindFirstObjectByType<TowerSpot>();
@@ -46,6 +45,7 @@ public class TowerPlacement : MonoBehaviour
                 if (_canPlace == true && Input.GetMouseButtonDown(0))
                 {
                     _uiManager.money -= _towerCost;
+                    _currentTower.GetComponent<TowerHP>().Placed();
                     _selectedSpot.PlacedTurret();
                     _towerSpots.PlacementParticles(false);
                     _currentTower = null;
@@ -55,22 +55,21 @@ public class TowerPlacement : MonoBehaviour
 
             if (Input.GetMouseButton(1))
             {
+                Debug.Log("Destroyed Tower");
                 _towerSpots.PlacementParticles(false);
                 Destroy(_currentTower);
                 _towerPlacementRadius.SetActive(false);
             }
         }
     }
-    public void PlaceTower(GameObject Tower)
+    public void TowerType(GameObject Tower)
+    {
+        _currentTower = Instantiate(Tower, Vector3.zero, Quaternion.identity);
+    }
+    public void TowerID(int ID) 
     {
         Destroy(_currentTower);
         _towerSpots.PlacementParticles(true);
-        _currentTower = Instantiate(Tower, Vector3.zero, Quaternion.identity);
-        _towerPlacementRadius.SetActive(true);
-    }
-
-    public void TowerSelect(int ID) 
-    {
         switch (ID) 
         {
             case 1:
@@ -80,5 +79,6 @@ public class TowerPlacement : MonoBehaviour
                 _towerCost = 500;
                 break;
         }
+        _towerPlacementRadius.SetActive(true);
     }
 }

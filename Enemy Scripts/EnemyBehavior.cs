@@ -10,30 +10,45 @@ public class EnemyBehavior : MonoBehaviour
         attacking,
         dead
     }
-    private _aiStates _state;
 
+    private float _healthResetRef;
+    private float _speedHealthRef; 
+    private static Animator _globalAnim;
+    public static NavMeshAgent _globalNavMesh;
+
+    private _aiStates _state;
     private UIManager _uimanager;
-    [SerializeField]
-    private Animator _anim;
+    [SerializeField] private Animator _anim;
+    [SerializeField] private Material _matRef;
     private NavMeshAgent _navMesh;
+
     private GameObject _startingPoint, _finishPoint;
     [SerializeField]
     private Material _dissolver;
     [SerializeField]
     private Renderer _model;
+    private SpawnManager _spawnManager;
     private TowerHP _currentTower;
-    [SerializeField]
-    public float health = 100;
-    private bool _damageCooldown = false;
+    [SerializeField] public float health = 100;
+
+    [SerializeField] private int _damage;
+    private bool _damageCD = false;
     private bool _deathMoney = false;
-    private bool _dissolveActive = false;
-    private bool _dissolveStrength;
     void Start()
     {
-        _startingPoint = GameObject.FindGameObjectWithTag("Starting Point");
-        _finishPoint = GameObject.FindGameObjectWithTag("Finish Point");
+
+        _globalAnim = _anim;
+        _healthResetRef = health;
+        _globalNavMesh = GetComponent<NavMeshAgent>();
+        
+        _spawnManager = FindObjectOfType<SpawnManager>();
         _uimanager = FindObjectOfType<UIManager>();
         _navMesh = GetComponent<NavMeshAgent>();
+
+        _startingPoint = GameObject.FindGameObjectWithTag("Starting Point");
+        _finishPoint = GameObject.FindGameObjectWithTag("Finish Point");
+        
+        
         _state = _aiStates.running;
     }
 
@@ -43,9 +58,14 @@ public class EnemyBehavior : MonoBehaviour
         switch (_state)
         {
             case _aiStates.running:
-                _navMesh.destination = _finishPoint.transform.position;
-                _navMesh.isStopped = false;
                 _anim.SetBool("Attack", false);
+                _navMesh.destination = _finishPoint.transform.position;
+                Vector3 destination = _navMesh.destination;
+                if(transform.position == destination)
+                {
+                    _navMesh.isStopped = false;
+                    Reset();
+                }
                 break;
 
             case _aiStates.attacking:
@@ -54,11 +74,14 @@ public class EnemyBehavior : MonoBehaviour
                 break;
 
             case _aiStates.dead:
+                gameObject.tag = "Ignore";
+                _anim.SetBool("attack", false);
                 _navMesh.isStopped = true;
                 _model.material = _dissolver;
-                _model.material.SetFloat("_Float", Mathf.MoveTowards(_model.material.GetFloat("_Float"), 1, Time.deltaTime));
+                _model.material.SetFloat("_DissolveStrength", Mathf.Sin(Time.time));
                 break;
         }
+
     }
 
     private void OnTriggerEnter(Collider other)
@@ -74,15 +97,17 @@ public class EnemyBehavior : MonoBehaviour
     {
         if (other.CompareTag("Turret"))
         {
-            Debug.Log("Tower Detected");
             Quaternion TurretDirection = Quaternion.LookRotation((other.transform.position - transform.position).normalized);
             transform.rotation = TurretDirection;
-          
-            _currentTower.Attacked(10);
+            if(_damageCD == false)
+            {
+                _damageCD = true;
+                StartCoroutine(DamageCD(10));
+            }
+            
             if (_currentTower.health < 1)
             {
                 _state = _aiStates.running;
-                Destroy(other.gameObject);
             }   
         }
     }
@@ -96,8 +121,6 @@ public class EnemyBehavior : MonoBehaviour
     }
     public void Injured(float DamageAmount)
     {
-        if (_damageCooldown == false)
-        {
             health = health - DamageAmount;
             if (health < 1)
             {
@@ -108,22 +131,50 @@ public class EnemyBehavior : MonoBehaviour
                 }
                 StartCoroutine(Death());
             }
-            _damageCooldown = true;
-            StartCoroutine(DamageCooldown());
-        }
     }
 
-    IEnumerator DamageCooldown()
+    public void Pause()
     {
-        yield return new WaitForSeconds(.3f);
-        _damageCooldown = false;
+        _globalNavMesh.isStopped = true;
+        _globalAnim.speed = 0;
     }
 
+    public void RegularSpeed()
+    {
+        _globalNavMesh.isStopped = false;
+        _globalAnim.speed = 1;
+        _globalNavMesh.speed = 1;
+    }
+
+    public void SpeedUp()
+    {
+        health = _healthResetRef;
+        _globalNavMesh.speed = 2;
+        _globalAnim.speed = 2;
+    }
+
+    private void Reset()
+    {
+        health = _healthResetRef;
+        _state = _aiStates.running;
+        _model.material = _matRef;
+        gameObject.tag = "Enemy";
+        this.gameObject.SetActive(false);
+    }
+
+    IEnumerator DamageCD(int Damage)
+    {
+        yield return new WaitForSeconds(1.15f);
+        _currentTower.Attacked(Damage);
+        yield return new WaitForSeconds(1.5f);
+        _damageCD = false;
+    }
     
     IEnumerator Death()
     {
         _state = _aiStates.dead;
-        yield return new WaitForSeconds(1);
-        this.gameObject.SetActive(false);
+        yield return new WaitForSeconds(3);
+        Reset();
+       
     }
 }
