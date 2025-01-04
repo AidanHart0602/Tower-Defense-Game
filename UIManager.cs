@@ -12,6 +12,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text _moneyText;
     [SerializeField] private Text _waveNumText;
     [SerializeField] private Image[] _hUD;
+    [SerializeField] private GameObject _gatlingUpgradePopUp;
     // Update is called once per frame
     void Update()
     {
@@ -25,6 +26,15 @@ public class UIManager : MonoBehaviour
         health -= 10;
     }
 
+    public void UpgradeGatlingPopUp()
+    {
+        _gatlingUpgradePopUp.SetActive(true);
+    }
+
+    public void CloseDualGatlingPopUp()
+    {
+        _gatlingUpgradePopUp.SetActive(false);
+    }
     private void UIHealth()
     {
         if (health < 100 && health >= 40) 

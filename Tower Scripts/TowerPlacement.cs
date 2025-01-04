@@ -9,10 +9,12 @@ public class TowerPlacement : MonoBehaviour
     private TowerSpot _towerSpots, _selectedSpot;
     [SerializeField] private Camera _playerCam;
     [SerializeField] private GameObject _towerPlacementRadius;
-    private GameObject _currentTower;
-    private bool _canPlace;
-    public LayerMask raycastLayers;
+    [SerializeField] private GameObject _currentTower;
+    private bool _canPlace, _canSelect;
+    public LayerMask placementLayers;
     private int _towerCost;
+    [SerializeField] private GameObject _towerSelect;
+    public LayerMask selectTowerLayer;
     void Start()
     {
         _towerSpots = FindFirstObjectByType<TowerSpot>();
@@ -24,9 +26,8 @@ public class TowerPlacement : MonoBehaviour
         {
             Ray CameraRay = _playerCam.ScreenPointToRay(Input.mousePosition);
 
-            if(Physics.Raycast(CameraRay, out RaycastHit info, 100f, raycastLayers))
+            if(Physics.Raycast(CameraRay, out RaycastHit info, 100f, placementLayers))
             {
-             
                 _currentTower.transform.position = info.point;
                 _towerPlacementRadius.transform.position = info.point;
 
@@ -36,6 +37,7 @@ public class TowerPlacement : MonoBehaviour
                     _towerPlacementRadius.GetComponent<Renderer>().material.SetColor("_Color", Color.green);
                     _canPlace = true;
                 }
+
                 else
                 {
                     _towerPlacementRadius.GetComponent<Renderer>().material.SetColor("_Color", Color.red);
@@ -45,11 +47,12 @@ public class TowerPlacement : MonoBehaviour
                 if (_canPlace == true && Input.GetMouseButtonDown(0))
                 {
                     _uiManager.money -= _towerCost;
-                    _currentTower.GetComponent<TowerHP>().Placed();
+                    _currentTower.GetComponentInChildren<TowerHP>().Placed();
                     _selectedSpot.PlacedTurret();
                     _towerSpots.PlacementParticles(false);
                     _currentTower = null;
                     _towerPlacementRadius.SetActive(false);
+                    StartCoroutine(Select());
                 }
             }
 
@@ -61,11 +64,42 @@ public class TowerPlacement : MonoBehaviour
                 _towerPlacementRadius.SetActive(false);
             }
         }
+
+        if(_currentTower == null)
+        {
+            Ray CameraRay = _playerCam.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(CameraRay, out RaycastHit info, 100f, selectTowerLayer))
+            {
+                if (info.collider.CompareTag("TowerSelect") && Input.GetMouseButtonDown(0) && _canSelect == true)
+                {
+                    Debug.Log("Detected a tower");
+                    _towerSelect = info.collider.gameObject;
+                    _uiManager.UpgradeGatlingPopUp();
+                }
+            }
+        }
     }
     public void TowerType(GameObject Tower)
     {
         _currentTower = Instantiate(Tower, Vector3.zero, Quaternion.identity);
     }
+
+    public void UpgradeTower()
+    {
+        if (_towerSelect.GetComponentInParent<GatlingTowerUpgrade>() == null && _uiManager.money >= 750)
+        {
+            _towerSelect.GetComponentInParent<LauncherTowerUpgrade>().UpgradeTurret();
+            _uiManager.money -= 750;
+            _uiManager.CloseDualGatlingPopUp();
+        }
+        else if(_towerSelect.GetComponentInParent<LauncherTowerUpgrade>() == null && _uiManager.money >= 500)
+        {
+            _towerSelect.GetComponentInParent<GatlingTowerUpgrade>().UpgradeTurret();
+            _uiManager.money -= 500;
+            _uiManager.CloseDualGatlingPopUp();
+        }
+    }
+
     public void TowerID(int ID) 
     {
         Destroy(_currentTower);
@@ -80,5 +114,12 @@ public class TowerPlacement : MonoBehaviour
                 break;
         }
         _towerPlacementRadius.SetActive(true);
+    }
+
+    IEnumerator Select()
+    {
+        _canSelect = false;
+        yield return new WaitForSeconds(.1f);
+        _canSelect = true;
     }
 }
