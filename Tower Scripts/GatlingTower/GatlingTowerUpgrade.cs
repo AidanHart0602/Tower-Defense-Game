@@ -8,7 +8,6 @@ public class GatlingTowerUpgrade : MonoBehaviour
 
     public void UpgradeTurret()
     {
-        Debug.Log("Upgraded Tower");
         GameObject turret = Instantiate(_dualTurret, transform);
         turret.transform.parent = null;
         Destroy(gameObject);

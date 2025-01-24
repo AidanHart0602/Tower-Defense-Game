@@ -11,6 +11,10 @@ public class CameraSystem : MonoBehaviour
     
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
         CamMovement();
         CamRotation();
         ZoomInAndOut();
@@ -19,7 +23,7 @@ public class CameraSystem : MonoBehaviour
     private void CamMovement()
     {
         Vector3 inputDirection = new Vector3(0, 0, 0);
-      
+
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
         {
             inputDirection.z = 1;
@@ -39,10 +43,6 @@ public class CameraSystem : MonoBehaviour
         {
             inputDirection.x = 1;
         }
-
-        Vector3 CamDirection = transform.forward * inputDirection.z + transform.right * inputDirection.x;
-
-        transform.position += CamDirection * camSpeed * Time.deltaTime;
 
         if (transform.position.z > 9.5f)
         {
@@ -64,6 +64,9 @@ public class CameraSystem : MonoBehaviour
             transform.position = new Vector3(-33, transform.position.y, transform.position.z);
             return;
         }
+
+        Vector3 CamDirection = transform.forward * inputDirection.z + transform.right * inputDirection.x;
+        transform.position += (CamDirection * camSpeed) * Time.unscaledDeltaTime;
     }
 
     void CamRotation()
@@ -79,7 +82,7 @@ public class CameraSystem : MonoBehaviour
         {
             camRotation += 1;
         }
-        Vector3 NewRotation = new Vector3(0, camRotation * rotationSpeed * Time.deltaTime, 0);
+        Vector3 NewRotation = new Vector3(0, camRotation * rotationSpeed * Time.unscaledDeltaTime, 0);
 
         transform.eulerAngles -= NewRotation;
     }

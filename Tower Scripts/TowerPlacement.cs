@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using BaseMissileLauncher;
+
 public class TowerPlacement : MonoBehaviour
 {
 
@@ -47,8 +47,8 @@ public class TowerPlacement : MonoBehaviour
                 if (_canPlace == true && Input.GetMouseButtonDown(0))
                 {
                     _uiManager.money -= _towerCost;
-                    _currentTower.GetComponentInChildren<TowerHP>().Placed();
-                    _selectedSpot.PlacedTurret();
+                    _currentTower.GetComponentInChildren<TowerHealth>().Placed();
+                  //  _selectedSpot.PlacedTurret(_currentTower);
                     _towerSpots.PlacementParticles(false);
                     _currentTower = null;
                     _towerPlacementRadius.SetActive(false);
@@ -58,7 +58,6 @@ public class TowerPlacement : MonoBehaviour
 
             if (Input.GetMouseButton(1))
             {
-                Debug.Log("Destroyed Tower");
                 _towerSpots.PlacementParticles(false);
                 Destroy(_currentTower);
                 _towerPlacementRadius.SetActive(false);
@@ -72,13 +71,22 @@ public class TowerPlacement : MonoBehaviour
             {
                 if (info.collider.CompareTag("TowerSelect") && Input.GetMouseButtonDown(0) && _canSelect == true)
                 {
-                    Debug.Log("Detected a tower");
                     _towerSelect = info.collider.gameObject;
-                    _uiManager.UpgradeGatlingPopUp();
+
+                    if (_towerSelect.transform.parent.GetComponent<LauncherTowerUpgrade>() != null)
+                    {
+                        _uiManager.UpgradeMissilePopUp(true);
+                    }
+
+                    else if(_towerSelect.transform.parent.GetComponent<GatlingTowerUpgrade>() != null)
+                    {
+                        _uiManager.UpgradeGatlingPopUp(true);
+                    }
                 }
             }
         }
     }
+
     public void TowerType(GameObject Tower)
     {
         _currentTower = Instantiate(Tower, Vector3.zero, Quaternion.identity);
@@ -90,13 +98,15 @@ public class TowerPlacement : MonoBehaviour
         {
             _towerSelect.GetComponentInParent<LauncherTowerUpgrade>().UpgradeTurret();
             _uiManager.money -= 750;
-            _uiManager.CloseDualGatlingPopUp();
+            _towerSelect = null;
+            _uiManager.UpgradeMissilePopUp(false);
         }
         else if(_towerSelect.GetComponentInParent<LauncherTowerUpgrade>() == null && _uiManager.money >= 500)
         {
             _towerSelect.GetComponentInParent<GatlingTowerUpgrade>().UpgradeTurret();
             _uiManager.money -= 500;
-            _uiManager.CloseDualGatlingPopUp();
+            _towerSelect = null;
+            _uiManager.UpgradeGatlingPopUp(false);
         }
     }
 
@@ -119,7 +129,7 @@ public class TowerPlacement : MonoBehaviour
     IEnumerator Select()
     {
         _canSelect = false;
-        yield return new WaitForSeconds(.1f);
+        yield return new WaitForSeconds(.3f);
         _canSelect = true;
     }
 }
